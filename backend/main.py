@@ -1,14 +1,19 @@
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Header, Query
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
+# pyrefly: ignore [missing-import]
 from fastapi.responses import FileResponse
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, EmailStr
 import smtplib
 from email.message import EmailMessage
 import os
 import csv
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
-
+    
 load_dotenv()
 
 app = FastAPI(title="AINITY API", description="API for AINITY AI and Aquatic Drones platform")
