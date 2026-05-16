@@ -101,6 +101,7 @@ export default function LearningPage() {
               <option value="drones-eng">Advanced Aquatic Drones Engineering</option>
               <option value="ml-ocean">Machine Learning in Oceanography</option>
               <option value="auv">Autonomous Underwater Vehicles (AUVs)</option>
+              <option value="qa-ai">QA Automation with AI</option>
               <option value="other">Other / Not Sure</option>
             </select>
           </div>
@@ -134,7 +135,7 @@ export default function LearningPage() {
             </button>
           </div>
           {status === "error" && (
-            <p className="text-red-500 dark:text-red-400 text-sm mt-2 text-center font-medium animate-in slide-in-from-top-1">There was an error submitting your form. Please try again.</p>
+            <p className="text-red-500 text-sm mt-2 text-center font-medium animate-in slide-in-from-top-1">There was an error submitting your form. Please try again.</p>
           )}
         </form>
       </div>
