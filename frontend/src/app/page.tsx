@@ -60,18 +60,23 @@ export default function EntryPage() {
   const isValidEmail = validateEmail(email);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[100vh] relative px-4 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col items-center justify-center min-h-[100vh] relative px-4 bg-[#060913] overflow-hidden">
+      
+      {/* Abstract Glowing Backdrop Orbs */}
+      <div className="absolute top-[10%] left-[20%] w-[350px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none z-0"></div>
+      <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] bg-indigo-600/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
+
       {status === "success" && (
-        <div className="fixed inset-0 flex items-center justify-center z-[100] bg-slate-900/60 backdrop-blur-md px-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center border border-slate-100 dark:border-slate-800 transform transition-all animate-in zoom-in duration-300">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+        <div className="fixed inset-0 flex items-center justify-center z-[100] bg-slate-950/80 backdrop-blur-md px-4">
+          <div className="glass-panel rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center border border-white/10 transform transition-all animate-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/20">
+              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Thank you!</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">Thank you for submitting and our team will contact you soon.</p>
+            <h3 className="text-2xl font-bold text-white mb-2 text-glow">Welcome</h3>
+            <p className="text-slate-300 mb-6">Your placement call slot is registered! Let&apos;s explore your learning paths.</p>
             <button 
               onClick={handleContinue} 
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-md hover:shadow-lg"
+              className="w-full py-3 px-4 bg-brand-accent hover:bg-blue-600 text-white font-bold rounded-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]"
             >
               Continue to Website
             </button>
@@ -85,56 +90,56 @@ export default function EntryPage() {
         alt="AINITY Background" 
         fill
         priority
-        className="object-cover object-center z-0 opacity-100 dark:opacity-80 transition-opacity"
+        className="object-cover object-center z-0 opacity-40 transition-opacity duration-1000"
       />
-      <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70 z-0 backdrop-blur-sm transition-colors"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#060913]/60 via-[#060913]/90 to-[#060913] z-0"></div>
 
-      <div className="relative z-10 max-w-md w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 sm:p-10 border border-white/20 dark:border-slate-700/50 animate-in slide-in-from-bottom-8 duration-700">
+      <div className="relative z-10 max-w-md w-full glass-panel backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.15)] p-8 sm:p-10 border border-white/10 animate-in slide-in-from-bottom-8 duration-700">
         <div className="text-center mb-8">
-          <div className="bg-white p-2 rounded-2xl inline-block mb-6 shadow-sm">
-            <Image src="/images/logo.png" alt="AINITY Logo" width={80} height={80} className="drop-shadow-sm rounded-xl" />
+          <div className="bg-slate-900/60 p-2.5 rounded-2xl inline-block mb-4 shadow-inner border border-white/5">
+            <Image src="/images/logo.png" alt="AINITY Logo" width={64} height={64} className="drop-shadow-sm rounded-xl" />
           </div>
-          <h1 className={`${spaceGrotesk.className} text-5xl font-extrabold text-blue-600 dark:text-blue-400 tracking-[0.2em] uppercase mb-4 drop-shadow-sm`}>
+          <h1 className={`${spaceGrotesk.className} text-4xl font-extrabold text-white tracking-[0.25em] uppercase mb-3 text-glow`}>
             AINITY
           </h1>
-          <p className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">Enter your email to unlock premium learning paths.</p>
+          <p className="text-slate-300 text-sm font-light leading-relaxed">Enter your email to unlock premium cross-sector learning paths.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+            <label htmlFor="email" className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Email Address</label>
             <div className="relative">
               <input
                 type="email"
                 id="email"
                 required
-                className={`block w-full rounded-xl shadow-inner sm:text-sm py-4 px-4 border transition-all outline-none text-slate-900 dark:text-white ${
-                  emailError ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50 dark:bg-red-900/20" : 
-                  isValidEmail ? "border-green-500 focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-green-50 dark:bg-green-900/20" : 
-                  "border-slate-300 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 bg-slate-50 dark:bg-slate-800"
+                className={`block w-full rounded-xl shadow-inner sm:text-sm py-4 px-4 border transition-all duration-300 outline-none text-white ${
+                  emailError ? "border-red-500/50 bg-red-900/10 focus:border-red-500 focus:ring-1 focus:ring-red-500" : 
+                  isValidEmail ? "border-green-500/50 bg-green-900/10 focus:border-green-500 focus:ring-1 focus:ring-green-500" : 
+                  "border-white/10 focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/50 bg-slate-950/65"
                 }`}
                 placeholder="you@example.com"
                 value={email}
                 onChange={handleEmailChange}
               />
               {isValidEmail && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400 animate-in zoom-in" />
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                  <CheckCircle2 className="h-5 w-5 text-green-400 animate-in zoom-in" />
                 </div>
               )}
             </div>
-            {emailError && <p className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium animate-in slide-in-from-top-1">{emailError}</p>}
+            {emailError && <p className="mt-2 text-xs text-red-400 font-medium animate-in slide-in-from-top-1">{emailError}</p>}
           </div>
           <button
             type="submit"
             disabled={status === "loading"}
-            className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none"
+            className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-brand-accent hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none"
           >
             {status === "loading" ? (
               <>
                 <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
-                Entering...
+                Entering System...
               </>
-            ) : "Start Learning"}
+            ) : "Unlock Premium Access"}
           </button>
         </form>
       </div>

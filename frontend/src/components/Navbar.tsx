@@ -25,17 +25,17 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm relative">
+    <nav className="glass-panel border-b border-white/5 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex w-full items-center justify-between">
             {/* Logo */}
             <Link href="/home" className="flex-shrink-0 flex items-center gap-3 group">
               <Image src="/images/logo.png" alt="AINITY Logo" width={36} height={36} className="rounded-md group-hover:scale-110 transition-transform" />
-              <span className={`${spaceGrotesk.className} text-2xl font-bold text-brand-primary tracking-[0.2em] uppercase`}>AINITY</span>
+              <span className={`${spaceGrotesk.className} text-2xl font-bold text-white tracking-[0.2em] uppercase group-hover:text-glow transition-all duration-300`}>AINITY</span>
             </Link>
 
-            {/* Desktop Navigation & Theme Toggle */}
+            {/* Desktop Navigation */}
             <div className="hidden sm:flex sm:items-center sm:space-x-8">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
@@ -43,10 +43,10 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-300 ${
                       isActive 
-                        ? "border-brand-accent text-brand-accent" 
-                        : "border-transparent text-brand-text-muted hover:border-brand-accent hover:text-brand-accent"
+                        ? "border-brand-accent text-white text-glow" 
+                        : "border-transparent text-slate-400 hover:border-brand-accent/50 hover:text-white"
                     }`}
                   >
                     {link.name}
@@ -60,7 +60,7 @@ export default function Navbar() {
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 type="button"
-                className="inline-flex items-center justify-center p-2 rounded-md text-brand-text-muted hover:text-brand-text hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent"
+                className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-900/60 focus:outline-none"
                 aria-expanded="false"
               >
                 <span className="sr-only">Open main menu</span>
@@ -73,7 +73,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="sm:hidden absolute top-16 left-0 w-full bg-white shadow-lg border-b border-slate-100 transition-colors duration-300" id="mobile-menu">
+        <div className="sm:hidden absolute top-16 left-0 w-full glass-panel border-b border-white/5 backdrop-blur-xl" id="mobile-menu">
           <div className="pt-2 pb-3 space-y-1">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
@@ -82,10 +82,10 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className={`block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors ${
+                  className={`block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-all duration-300 ${
                     isActive
-                      ? "bg-brand-accent-soft border-brand-accent text-brand-accent"
-                      : "border-transparent text-brand-text-muted hover:bg-slate-50 hover:border-slate-300 hover:text-brand-text"
+                      ? "bg-brand-accent/15 border-brand-accent text-white text-glow"
+                      : "border-transparent text-slate-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {link.name}

@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #001A3D;
-  --brand-primary: #001A3D;
-  --brand-accent: #0066FF;
-  --brand-accent-soft: #E6F0FF;
-  --brand-text: #1A202C;
-  --brand-text-muted: #4A5568;
+  --background: #060913;
+  --foreground: #f8fafc;
+  --brand-primary: #0f172a;
+  --brand-accent: #3b82f6;
+  --brand-accent-soft: rgba(59, 130, 246, 0.1);
+  --brand-text: #f8fafc;
+  --brand-text-muted: #94a3b8;
 }
 
 @theme inline {
@@ -23,5 +23,17 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glowing text */
+.text-glow {
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }

@@ -48,18 +48,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-slate-50 text-slate-900 min-h-screen flex flex-col transition-colors duration-300`}>
-        <NextTopLoader color="#2563eb" showSpinner={false} />
+      <body className={`${inter.className} bg-background text-foreground min-h-screen flex flex-col transition-all duration-300`}>
+        <NextTopLoader color="#3b82f6" showSpinner={false} />
         <Navbar />
         <main className="flex-grow">
           {children}
         </main>
-        <footer className="bg-white border-t border-slate-200 mt-auto relative z-10 transition-colors duration-300">
+        <footer className="glass-panel border-t border-white/5 mt-auto relative z-10">
           <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-slate-500">&copy; 2026 AINITY. All rights reserved.</p>
-            <div className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <p className="text-sm text-slate-400">&copy; 2026 AINITY. All rights reserved.</p>
+            <div className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
               <Image src="/images/logo.png" alt="AINITY Logo" width={24} height={24} className="rounded-md" />
-              <span className={`${spaceGrotesk.className} text-sm font-bold text-slate-500 tracking-[0.2em] uppercase`}>AINITY</span>
+              <span className={`${spaceGrotesk.className} text-sm font-bold text-white tracking-[0.2em] uppercase`}>AINITY</span>
             </div>
           </div>
         </footer>
