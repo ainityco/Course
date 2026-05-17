@@ -1,13 +1,16 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Header, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 import smtplib
 from email.message import EmailMessage
 import os
 import csv
 import io
-from datetime import datetime
+import hmac
+import time
+from collections import defaultdict, deque
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -17,15 +20,32 @@ app = FastAPI(title="AINITY API", description="API for AINITY AI and Aquatic Dro
 
 # Security settings
 ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
-ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(",")]
+DEFAULT_ALLOWED_ORIGINS = {
+    "http://localhost:3000",
+    "https://ainity.in",
+    "https://www.ainity.in",
+}
+ALLOWED_ORIGINS = sorted(
+    DEFAULT_ALLOWED_ORIGINS
+    | {origin.strip() for origin in ALLOWED_ORIGINS_STR.split(",") if origin.strip()}
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "x-admin-password"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
 
 # Configuration for SMTP
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
@@ -35,7 +55,18 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL", SMTP_USER)
 
 # Admin Security
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ainityadmin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+if not ADMIN_PASSWORD:
+    print("WARNING: ADMIN_PASSWORD is not set. Admin endpoints will reject all requests.")
+
+# Basic in-memory abuse protection. Render normally runs one instance for this
+# scale, so this blocks simple brute force and spam without extra services.
+RATE_LIMITS = {
+    "entry": (10, 60),
+    "learning": (5, 60),
+    "admin": (8, 300),
+}
+rate_limit_hits = defaultdict(deque)
 
 # MongoDB Connection
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -77,10 +108,36 @@ class EntryRequest(BaseModel):
     email: EmailStr
 
 class LearningInterestRequest(BaseModel):
-    username: str
+    username: str = Field(min_length=2, max_length=80)
     email: EmailStr
-    purpose: str
-    course: str
+    purpose: str = Field(min_length=5, max_length=1200)
+    course: str = Field(min_length=2, max_length=80)
+
+def now_iso():
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+def safe_csv_value(value):
+    text = "" if value is None else str(value)
+    if text.startswith(("=", "+", "-", "@")):
+        return "'" + text
+    return text
+
+def check_rate_limit(bucket: str, identifier: str):
+    max_hits, window_seconds = RATE_LIMITS[bucket]
+    now = time.monotonic()
+    key = f"{bucket}:{identifier}"
+    hits = rate_limit_hits[key]
+    while hits and now - hits[0] > window_seconds:
+        hits.popleft()
+    if len(hits) >= max_hits:
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+    hits.append(now)
+
+def client_identifier(request: Request):
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 # Email Sender Helper
 def send_email(subject: str, content: str):
@@ -108,21 +165,22 @@ def send_email(subject: str, content: str):
 def save_entry_to_csv(email: str):
     with open(ENTRY_CSV_FILE, mode='a', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), email])
+        writer.writerow([now_iso(), safe_csv_value(email)])
 
 def save_learning_to_csv(data: dict):
     with open(LEARNING_CSV_FILE, mode='a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            data.get("username", ""),
-            data.get("email", ""),
-            data.get("course", ""),
-            data.get("purpose", "")
+            now_iso(),
+            safe_csv_value(data.get("username", "")),
+            safe_csv_value(data.get("email", "")),
+            safe_csv_value(data.get("course", "")),
+            safe_csv_value(data.get("purpose", ""))
         ])
 
 @app.post("/api/entry")
-async def register_entry(request: EntryRequest, background_tasks: BackgroundTasks):
+async def register_entry(request: EntryRequest, background_tasks: BackgroundTasks, http_request: Request):
+    check_rate_limit("entry", client_identifier(http_request))
     subject = "New Entry on AINITY"
     content = f"A user has entered the AINITY site.\n\nEmail: {request.email}"
     background_tasks.add_task(send_email, subject, content)
@@ -131,7 +189,7 @@ async def register_entry(request: EntryRequest, background_tasks: BackgroundTask
     if entries_col is not None:
         try:
             await entries_col.insert_one({
-                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Timestamp": now_iso(),
                 "Email": request.email
             })
         except Exception as e:
@@ -143,7 +201,8 @@ async def register_entry(request: EntryRequest, background_tasks: BackgroundTask
     return {"message": "Entry recorded successfully"}
 
 @app.post("/api/learning-interest")
-async def register_learning_interest(request: LearningInterestRequest, background_tasks: BackgroundTasks):
+async def register_learning_interest(request: LearningInterestRequest, background_tasks: BackgroundTasks, http_request: Request):
+    check_rate_limit("learning", client_identifier(http_request))
     subject = f"New Course Interest: {request.course}"
     content = f"New learning interest registered on AINITY:\n\nUsername: {request.username}\nEmail: {request.email}\nCourse: {request.course}\n\nPurpose of Learning:\n{request.purpose}"
     background_tasks.add_task(send_email, subject, content)
@@ -152,7 +211,7 @@ async def register_learning_interest(request: LearningInterestRequest, backgroun
     if learning_col is not None:
         try:
             await learning_col.insert_one({
-                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Timestamp": now_iso(),
                 "Username": request.username,
                 "Email": request.email,
                 "Course": request.course,
@@ -169,11 +228,12 @@ async def register_learning_interest(request: LearningInterestRequest, backgroun
 # --- ADMIN SECURE ENDPOINTS ---
 
 def verify_admin(password: str):
-    if password != ADMIN_PASSWORD:
+    if not ADMIN_PASSWORD or not password or not hmac.compare_digest(password, ADMIN_PASSWORD):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 @app.get("/api/admin/entries")
-async def get_entries_json(x_admin_password: str = Header(None)):
+async def get_entries_json(http_request: Request, x_admin_password: str = Header(None)):
+    check_rate_limit("admin", client_identifier(http_request))
     verify_admin(x_admin_password)
     
     # Try fetching from MongoDB
@@ -192,7 +252,8 @@ async def get_entries_json(x_admin_password: str = Header(None)):
         return list(reader)
 
 @app.get("/api/admin/learning")
-async def get_learning_json(x_admin_password: str = Header(None)):
+async def get_learning_json(http_request: Request, x_admin_password: str = Header(None)):
+    check_rate_limit("admin", client_identifier(http_request))
     verify_admin(x_admin_password)
     
     # Try fetching from MongoDB
@@ -211,7 +272,8 @@ async def get_learning_json(x_admin_password: str = Header(None)):
         return list(reader)
 
 @app.get("/api/admin/download-entries")
-async def download_entries(x_admin_password: str = Header(None)):
+async def download_entries(http_request: Request, x_admin_password: str = Header(None)):
+    check_rate_limit("admin", client_identifier(http_request))
     verify_admin(x_admin_password)
     
     # Try generating CSV dynamically from MongoDB
@@ -224,7 +286,7 @@ async def download_entries(x_admin_password: str = Header(None)):
             writer = csv.writer(output)
             writer.writerow(["Timestamp", "Email"])
             for row in results:
-                writer.writerow([row.get("Timestamp"), row.get("Email")])
+                writer.writerow([safe_csv_value(row.get("Timestamp")), safe_csv_value(row.get("Email"))])
             
             output.seek(0)
             return StreamingResponse(
@@ -241,7 +303,8 @@ async def download_entries(x_admin_password: str = Header(None)):
     return FileResponse(ENTRY_CSV_FILE, media_type="text/csv", filename="ainity_entries.csv")
 
 @app.get("/api/admin/download-learning")
-async def download_learning(x_admin_password: str = Header(None)):
+async def download_learning(http_request: Request, x_admin_password: str = Header(None)):
+    check_rate_limit("admin", client_identifier(http_request))
     verify_admin(x_admin_password)
     
     # Try generating CSV dynamically from MongoDB
@@ -255,11 +318,11 @@ async def download_learning(x_admin_password: str = Header(None)):
             writer.writerow(["Timestamp", "Username", "Email", "Course", "Purpose"])
             for row in results:
                 writer.writerow([
-                    row.get("Timestamp"),
-                    row.get("Username"),
-                    row.get("Email"),
-                    row.get("Course"),
-                    row.get("Purpose")
+                    safe_csv_value(row.get("Timestamp")),
+                    safe_csv_value(row.get("Username")),
+                    safe_csv_value(row.get("Email")),
+                    safe_csv_value(row.get("Course")),
+                    safe_csv_value(row.get("Purpose"))
                 ])
             
             output.seek(0)

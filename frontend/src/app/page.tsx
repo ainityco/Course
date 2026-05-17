@@ -38,11 +38,14 @@ export default function EntryPage() {
     setStatus("loading");
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      await fetch(`${API_URL}/api/entry`, {
+      const response = await fetch(`${API_URL}/api/entry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+      if (!response.ok) {
+        throw new Error("Entry submission failed");
+      }
       setStatus("success");
     } catch (error) {
       console.error(error);

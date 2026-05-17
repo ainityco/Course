@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AINITY - Universal Learning & Innovation",
     description: "Universal growth, learning, and innovation across all domains. Empowering individuals and communities to upskill and turn their ideas into reality.",
-    url: "https://course-rho-topaz.vercel.app",
+    url: "https://www.ainity.in",
     siteName: "AINITY",
     images: [
       {
@@ -32,6 +32,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  metadataBase: new URL("https://www.ainity.in"),
   twitter: {
     card: "summary_large_image",
     title: "AINITY - Universal Learning & Innovation",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -11,13 +11,7 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-
-  // useEffect only runs on the client, so now we can safely show the UI
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (pathname === "/") return null;
 

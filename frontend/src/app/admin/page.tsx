@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { Lock, Download, Users, BookOpen, Loader2 } from "lucide-react";
 
+type SubmissionRow = {
+  Timestamp?: string;
+  Email?: string;
+  Username?: string;
+  Course?: string;
+  Purpose?: string;
+};
+
 export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,8 +18,8 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   
   const [activeTab, setActiveTab] = useState<"entries" | "learning">("entries");
-  const [entries, setEntries] = useState<any[]>([]);
-  const [learning, setLearning] = useState<any[]>([]);
+  const [entries, setEntries] = useState<SubmissionRow[]>([]);
+  const [learning, setLearning] = useState<SubmissionRow[]>([]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +46,7 @@ export default function AdminDashboard() {
       setEntries(entryData);
       setLearning(learningData);
       setIsAuthenticated(true);
-    } catch (err) {
+    } catch {
       setError("Authentication failed. Please check the password.");
     } finally {
       setIsLoading(false);

@@ -6,7 +6,7 @@ export default function ContactPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 animate-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white rounded-3xl shadow-xl p-8 sm:p-12 border border-slate-50 text-center transition-colors duration-300">
         <h1 className="text-4xl font-extrabold text-brand-primary mb-4 tracking-tight">Get in Touch</h1>
-        <p className="text-xl text-brand-text-muted mb-12 max-w-2xl mx-auto">Have a question or want to learn more about AINITY? We'd love to hear from you.</p>
+        <p className="text-xl text-brand-text-muted mb-12 max-w-2xl mx-auto">Have a question or want to learn more about AINITY? We&apos;d love to hear from you.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div className="flex flex-col items-center p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">

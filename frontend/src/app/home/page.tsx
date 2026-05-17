@@ -30,7 +30,7 @@ const FloatingSocialBar = () => {
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
       </a>
       {/* Email */}
-      <a href="mailto:contact@ainity.example.com" className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg border border-slate-100 hover:scale-110 hover:bg-brand-accent hover:text-white transition-all duration-300 text-brand-text-muted">
+      <a href="mailto:ainity.345@gmail.com" className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg border border-slate-100 hover:scale-110 hover:bg-brand-accent hover:text-white transition-all duration-300 text-brand-text-muted">
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M0 3v18h24v-18h-24zm21.518 2l-9.518 7.713-9.518-7.713h19.036zm-19.518 14v-11.817l10 8.104 10-8.104v11.817h-20z"/></svg>
       </a>
     </div>
@@ -132,7 +132,7 @@ export default function HomePage() {
               Master the Future with AI & Robotics
             </h1>
             <p className="text-xl sm:text-2xl text-brand-accent-soft max-w-2xl mb-8 drop-shadow-sm">
-              Explore cutting-edge domains like AI technology and aquatic drones. Learn from industry leaders and build tomorrow's technology today.
+              Explore cutting-edge domains like AI technology and aquatic drones. Learn from industry leaders and build tomorrow&apos;s technology today.
             </p>
             <Link href="/learning" className="inline-block bg-white text-brand-primary font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-brand-accent-soft hover:scale-105 transition-all transform">
               Start Learning
@@ -217,7 +217,7 @@ export default function HomePage() {
               <div>
                 <h2 className="text-3xl font-extrabold text-white mb-6 tracking-tight">A Message From Our Founder</h2>
                 <p className="text-brand-accent-soft text-lg leading-relaxed mb-6 italic">
-                  "I founded AINITY with a simple but powerful belief: that the tools of the future should belong to everyone. Whether you are in a tech hub or a rural village, your ideas deserve to become reality. Our platform is designed to help people across all sectors upskill themselves and drive innovation in their own domains. We are here to ensure that background and geography are never barriers to growth, learning, and making a real-world impact."
+                  &quot;I founded AINITY with a simple but powerful belief: that the tools of the future should belong to everyone. Whether you are in a tech hub or a rural village, your ideas deserve to become reality. Our platform is designed to help people across all sectors upskill themselves and drive innovation in their own domains. We are here to ensure that background and geography are never barriers to growth, learning, and making a real-world impact.&quot;
                 </p>
                 <div>
                   <div className="text-white font-bold text-xl">Durga Prasad Bandaru</div>
@@ -250,7 +250,7 @@ export default function HomePage() {
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />)}
                 </div>
-                <p className="text-brand-text-muted mb-6 italic">"{testimonial.text}"</p>
+                <p className="text-brand-text-muted mb-6 italic">&quot;{testimonial.text}&quot;</p>
                 <div>
                   <h4 className="font-bold text-brand-primary">{testimonial.name}</h4>
                   <p className="text-sm text-brand-accent font-medium">{testimonial.role}</p>
