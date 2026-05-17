@@ -47,7 +47,8 @@ learning_col = None
 if MONGODB_URI:
     try:
         db_client = AsyncIOMotorClient(MONGODB_URI)
-        db = db_client.get_default_database("ainity")
+        # Use explicit indexing db_client["ainity"] because connection string doesn't specify a default db name
+        db = db_client["ainity"]
         entries_col = db.entries
         learning_col = db.learning_interests
         print("Connected to MongoDB successfully!")
@@ -277,4 +278,5 @@ async def download_learning(x_admin_password: str = Header(None)):
 
 @app.get("/")
 def health_check():
-    return {"status": "ok", "message": "AINITY API is running"}
+    mongo_status = "Connected" if entries_col is not None else "Not Connected (CSV Fallback)"
+    return {"status": "ok", "message": "AINITY API is running", "database": mongo_status}
