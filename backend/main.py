@@ -7,10 +7,13 @@ from email.message import EmailMessage
 import os
 import csv
 import io
+import base64
+import hashlib
 import hmac
+import json
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -35,7 +38,7 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "x-admin-password"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 @app.middleware("http")
@@ -56,8 +59,12 @@ RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL", SMTP_USER)
 
 # Admin Security
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+ADMIN_SESSION_SECRET = os.getenv("ADMIN_SESSION_SECRET") or ADMIN_PASSWORD
+ADMIN_SESSION_TTL_HOURS = int(os.getenv("ADMIN_SESSION_TTL_HOURS", "8"))
 if not ADMIN_PASSWORD:
     print("WARNING: ADMIN_PASSWORD is not set. Admin endpoints will reject all requests.")
+if ADMIN_PASSWORD and ADMIN_SESSION_SECRET == ADMIN_PASSWORD:
+    print("WARNING: ADMIN_SESSION_SECRET is not set. Using ADMIN_PASSWORD as the session signing secret.")
 
 # Basic in-memory abuse protection. Render normally runs one instance for this
 # scale, so this blocks simple brute force and spam without extra services.
@@ -113,6 +120,9 @@ class LearningInterestRequest(BaseModel):
     purpose: str = Field(min_length=5, max_length=1200)
     course: str = Field(min_length=2, max_length=80)
 
+class AdminLoginRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=256)
+
 def now_iso():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -138,6 +148,57 @@ def client_identifier(request: Request):
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
+
+def base64url_encode(data: bytes):
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("utf-8")
+
+def base64url_decode(value: str):
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(value + padding)
+
+def sign_admin_payload(payload: dict):
+    encoded_payload = base64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    signature = hmac.new(
+        ADMIN_SESSION_SECRET.encode("utf-8"),
+        encoded_payload.encode("utf-8"),
+        hashlib.sha256,
+    ).digest()
+    return f"{encoded_payload}.{base64url_encode(signature)}"
+
+def create_admin_session_token():
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=ADMIN_SESSION_TTL_HOURS)
+    return sign_admin_payload({
+        "sub": "admin",
+        "exp": int(expires_at.timestamp()),
+    })
+
+def verify_admin_password(password: str):
+    if not ADMIN_PASSWORD or not password or not hmac.compare_digest(password, ADMIN_PASSWORD):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+def verify_admin_session(authorization: str):
+    if not ADMIN_SESSION_SECRET:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    token = authorization.removeprefix("Bearer ").strip()
+    try:
+        encoded_payload, encoded_signature = token.split(".", 1)
+        expected_signature = hmac.new(
+            ADMIN_SESSION_SECRET.encode("utf-8"),
+            encoded_payload.encode("utf-8"),
+            hashlib.sha256,
+        ).digest()
+        provided_signature = base64url_decode(encoded_signature)
+        if not hmac.compare_digest(provided_signature, expected_signature):
+            raise ValueError("Invalid signature")
+        payload = json.loads(base64url_decode(encoded_payload))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    if payload.get("sub") != "admin" or int(payload.get("exp", 0)) < int(time.time()):
+        raise HTTPException(status_code=401, detail="Session expired")
 
 # Email Sender Helper
 def send_email(subject: str, content: str):
@@ -227,14 +288,19 @@ async def register_learning_interest(request: LearningInterestRequest, backgroun
 
 # --- ADMIN SECURE ENDPOINTS ---
 
-def verify_admin(password: str):
-    if not ADMIN_PASSWORD or not password or not hmac.compare_digest(password, ADMIN_PASSWORD):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+@app.post("/api/admin/login")
+async def admin_login(request: AdminLoginRequest, http_request: Request):
+    check_rate_limit("admin", client_identifier(http_request))
+    verify_admin_password(request.password)
+    return {
+        "token": create_admin_session_token(),
+        "expiresInSeconds": ADMIN_SESSION_TTL_HOURS * 60 * 60,
+    }
 
 @app.get("/api/admin/entries")
-async def get_entries_json(http_request: Request, x_admin_password: str = Header(None)):
+async def get_entries_json(http_request: Request, authorization: str = Header(None)):
     check_rate_limit("admin", client_identifier(http_request))
-    verify_admin(x_admin_password)
+    verify_admin_session(authorization)
     
     # Try fetching from MongoDB
     if entries_col is not None:
@@ -252,9 +318,9 @@ async def get_entries_json(http_request: Request, x_admin_password: str = Header
         return list(reader)
 
 @app.get("/api/admin/learning")
-async def get_learning_json(http_request: Request, x_admin_password: str = Header(None)):
+async def get_learning_json(http_request: Request, authorization: str = Header(None)):
     check_rate_limit("admin", client_identifier(http_request))
-    verify_admin(x_admin_password)
+    verify_admin_session(authorization)
     
     # Try fetching from MongoDB
     if learning_col is not None:
@@ -272,9 +338,9 @@ async def get_learning_json(http_request: Request, x_admin_password: str = Heade
         return list(reader)
 
 @app.get("/api/admin/download-entries")
-async def download_entries(http_request: Request, x_admin_password: str = Header(None)):
+async def download_entries(http_request: Request, authorization: str = Header(None)):
     check_rate_limit("admin", client_identifier(http_request))
-    verify_admin(x_admin_password)
+    verify_admin_session(authorization)
     
     # Try generating CSV dynamically from MongoDB
     if entries_col is not None:
@@ -303,9 +369,9 @@ async def download_entries(http_request: Request, x_admin_password: str = Header
     return FileResponse(ENTRY_CSV_FILE, media_type="text/csv", filename="ainity_entries.csv")
 
 @app.get("/api/admin/download-learning")
-async def download_learning(http_request: Request, x_admin_password: str = Header(None)):
+async def download_learning(http_request: Request, authorization: str = Header(None)):
     check_rate_limit("admin", client_identifier(http_request))
-    verify_admin(x_admin_password)
+    verify_admin_session(authorization)
     
     # Try generating CSV dynamically from MongoDB
     if learning_col is not None:

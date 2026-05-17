@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Lock, Download, Users, BookOpen, Loader2 } from "lucide-react";
 
 type SubmissionRow = {
@@ -11,8 +11,11 @@ type SubmissionRow = {
   Purpose?: string;
 };
 
+const ADMIN_SESSION_KEY = "ainity_admin_session";
+
 export default function AdminDashboard() {
   const [password, setPassword] = useState("");
+  const [sessionToken, setSessionToken] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,31 +24,72 @@ export default function AdminDashboard() {
   const [entries, setEntries] = useState<SubmissionRow[]>([]);
   const [learning, setLearning] = useState<SubmissionRow[]>([]);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  const loadAdminData = useCallback(async (token: string) => {
+    const headers = { Authorization: `Bearer ${token}` };
+    const [entryRes, learningRes] = await Promise.all([
+      fetch(`${API_URL}/api/admin/entries`, { headers }),
+      fetch(`${API_URL}/api/admin/learning`, { headers }),
+    ]);
+
+    if (!entryRes.ok || !learningRes.ok) {
+      throw new Error("Admin session is invalid");
+    }
+
+    const [entryData, learningData] = await Promise.all([
+      entryRes.json(),
+      learningRes.json(),
+    ]);
+
+    setEntries(entryData);
+    setLearning(learningData);
+    setSessionToken(token);
+    setIsAuthenticated(true);
+  }, [API_URL]);
+
+  const lockDashboard = useCallback(() => {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    setPassword("");
+    setSessionToken("");
+    setIsAuthenticated(false);
+    setEntries([]);
+    setLearning([]);
+  }, []);
+
+  useEffect(() => {
+    const savedToken = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!savedToken) return;
+
+    const restoreTimer = window.setTimeout(() => {
+      loadAdminData(savedToken).catch(() => {
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      });
+    }, 0);
+
+    return () => window.clearTimeout(restoreTimer);
+  }, [loadAdminData]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const entryRes = await fetch(`${API_URL}/api/admin/entries`, {
-        headers: { "x-admin-password": password }
+      const loginRes = await fetch(`${API_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
       });
-      
-      if (!entryRes.ok) {
+
+      if (!loginRes.ok) {
         throw new Error("Invalid password");
       }
-      
-      const learningRes = await fetch(`${API_URL}/api/admin/learning`, {
-        headers: { "x-admin-password": password }
-      });
-      
-      const entryData = await entryRes.json();
-      const learningData = await learningRes.json();
-      
-      setEntries(entryData);
-      setLearning(learningData);
-      setIsAuthenticated(true);
+
+      const { token } = await loginRes.json();
+      sessionStorage.setItem(ADMIN_SESSION_KEY, token);
+      await loadAdminData(token);
+      setPassword("");
     } catch {
       setError("Authentication failed. Please check the password.");
     } finally {
@@ -55,12 +99,15 @@ export default function AdminDashboard() {
 
   const downloadCSV = async (type: "entries" | "learning") => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const res = await fetch(`${API_URL}/api/admin/download-${type}`, {
         method: "GET",
-        headers: { "x-admin-password": password }
+        headers: { Authorization: `Bearer ${sessionToken}` },
       });
       
+      if (res.status === 401) {
+        lockDashboard();
+        throw new Error("Session expired");
+      }
       if (!res.ok) throw new Error("Download failed");
       
       const blob = await res.blob();
@@ -119,7 +166,7 @@ export default function AdminDashboard() {
           <p className="text-brand-text-muted mt-1">Manage and export your platform leads securely.</p>
         </div>
         <button 
-          onClick={() => setIsAuthenticated(false)}
+          onClick={lockDashboard}
           className="text-sm font-medium text-brand-text-muted hover:text-brand-primary transition-colors"
         >
           Lock Dashboard
