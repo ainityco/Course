@@ -5,6 +5,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import BackToTop from "@/components/BackToTop";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
@@ -62,6 +63,7 @@ export default function RootLayout({
           </div>
         </footer>
         <BackToTop />
+        <Analytics />
       </body>
     </html>
   );
