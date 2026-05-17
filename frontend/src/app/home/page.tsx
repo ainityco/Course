@@ -42,38 +42,38 @@ export default function HomePage() {
 
   const courses = [
     {
-      title: "Introduction to Artificial Intelligence",
+      title: "AI Foundations for Students and Professionals",
       rating: 4.8,
-      students: "12,400",
-      target: "Beginners & Tech Enthusiasts",
+      students: "1,200+",
+      target: "Beginners & Career Starters",
       image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2070&auto=format&fit=crop",
     },
     {
-      title: "Advanced Aquatic Drones Engineering",
+      title: "Practical Drone Technology and Robotics",
       rating: 4.9,
-      students: "8,200",
-      target: "Mechanical Engineers & Hobbyists",
+      students: "850+",
+      target: "Engineering Students & Makers",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop",
     },
     {
-      title: "Machine Learning in Oceanography",
+      title: "Machine Learning for Real-World Projects",
       rating: 4.7,
-      students: "5,100",
-      target: "Researchers & Marine Scientists",
+      students: "900+",
+      target: "Developers & Data Learners",
       image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
     },
     {
-      title: "Autonomous Underwater Vehicles (AUVs)",
+      title: "Autonomous Systems and IoT Basics",
       rating: 4.6,
-      students: "3,800",
-      target: "Robotics Students & Engineers",
+      students: "600+",
+      target: "Robotics & IoT Learners",
       image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop",
     },
     {
-      title: "QA Automation with AI",
+      title: "AI-Powered QA and Test Automation",
       rating: 4.9,
-      students: "9,100",
-      target: "Software Testers & Developers",
+      students: "1,000+",
+      target: "QA Engineers & Developers",
       image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=2128&auto=format&fit=crop",
     }
   ];
@@ -85,7 +85,7 @@ export default function HomePage() {
   ];
 
   const testimonials = [
-    { name: "Priya Sharma", role: "Marine Biologist", text: "The Machine Learning in Oceanography course completely transformed how I analyze sonar data. Highly recommended!" },
+    { name: "Priya Sharma", role: "QA Automation Engineer", text: "AINITY helped me understand how AI can support test automation, from smarter test cases to faster defect analysis." },
     { name: "Arjun Mehta", role: "Software Engineer", text: "Incredible platform. The UI is stunning and the AI curriculum is world-class. Worth every penny." },
     { name: "Ananya Iyer", role: "Robotics Student", text: "The AUV course gave me practical insights I couldn't find anywhere else. The simulations are insanely good." },
   ];
